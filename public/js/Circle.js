@@ -1,8 +1,9 @@
-import { ctx, canvas } from "./canvas.js";
+import { ctx, randCoord } from "./canvas.js";
 import { distance, randColor, randInt } from "./helper.js";
 
 const GROW_SPEED = 0.1;
 const MAX_CIRCLE_NUMBER = 100000;
+const MAX_ITERATIONS = 10000;
 
 export class Circle {
     static list = [];
@@ -18,21 +19,19 @@ export class Circle {
 
     static createCircle() {
         if (this.list.length < MAX_CIRCLE_NUMBER) {
-            let x = randInt(0, canvas.width);
-            let y = randInt(0, canvas.height);
+            let [x, y] = randCoord();
             let tries = 0;
             while (
                 this.list.some((circle) => circle.contains(x, y))
             ) {
                 tries++;
-                x = randInt(0, canvas.width);
-                y = randInt(0, canvas.height);
-                if (tries === 10000) {
+                if (tries === MAX_ITERATIONS) {
                     console.log(
-                        "couldn't find a point after 10000 iterations"
+                        `couldn't find a point after ${MAX_ITERATIONS} iterations`
                     );
                     return;
                 }
+                [x, y] = randCoord();
             }
             this.list.push(new Circle(x, y, 1));
         }
@@ -40,12 +39,12 @@ export class Circle {
 
     static handleTouches() {
         for (let i = 0; i < this.list.length; i++) {
-            const c = this.list[i];
             for (let j = i + 1; j < this.list.length; j++) {
+                const c = this.list[i];
                 const d = this.list[j];
                 if (c.intersects(d)) {
-                    c.growingSpeed = -0.1;
-                    d.growingSpeed = -0.1;
+                    c.growingSpeed = -GROW_SPEED;
+                    d.growingSpeed = -GROW_SPEED;
                 }
             }
         }
@@ -60,7 +59,7 @@ export class Circle {
     }
 
     update() {
-        this.r = this.r + this.growingSpeed;
+        this.r += this.growingSpeed;
         if (this.r <= 1) {
             this.r = 1;
             this.growingSpeed = GROW_SPEED;
@@ -73,7 +72,6 @@ export class Circle {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI, false);
         ctx.fill();
-        ctx.globalAlpha = 1;
     }
 
     contains(u, v) {
