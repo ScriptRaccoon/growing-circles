@@ -1,21 +1,24 @@
-import { randInt } from "./helper.js";
+import { randomInteger } from "./helper.js";
 
 export const canvas = document.getElementById("canvas");
 export const ctx = canvas.getContext("2d");
 
-function adjustCanvas() {
+function makeCanvasFullscreen() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
 
-adjustCanvas();
+makeCanvasFullscreen();
 
-window.addEventListener("resize", adjustCanvas);
+window.addEventListener("resize", makeCanvasFullscreen);
 
-export function eraseCanvas() {
+export function clearCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-export function randCoord() {
-    return [randInt(0, canvas.width), randInt(0, canvas.height)];
+export function randomPoint() {
+    return [
+        randomInteger(0, canvas.width),
+        randomInteger(0, canvas.height),
+    ];
 }

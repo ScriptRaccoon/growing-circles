@@ -1,87 +1,81 @@
-import { ctx, randCoord } from "./canvas.js";
-import { distance, randColor, randInt } from "./helper.js";
-
-const GROW_SPEED = 0.1;
-const MAX_CIRCLE_NUMBER = 100000;
-const MAX_ITERATIONS = 10000;
+import { ctx, randomPoint } from "./canvas.js";
+import { distance, randomColor } from "./helper.js";
 
 export class Circle {
     static list = [];
+    static GROW_SPEED = 0.1;
+    static MAX_NUMBER = 100000;
 
     static updateCircles() {
-        this.list.forEach((c) => c.update());
-        Circle.handleTouches();
+        Circle.list.forEach((c) => c.update());
     }
 
     static drawCircles() {
-        this.list.forEach((c) => c.draw(ctx));
+        Circle.list.forEach((c) => c.draw());
     }
 
     static createCircle() {
-        if (this.list.length < MAX_CIRCLE_NUMBER) {
-            let [x, y] = randCoord();
+        if (Circle.list.length < Circle.MAX_NUMBER) {
+            let point = randomPoint();
             let tries = 0;
             while (
-                this.list.some((circle) => circle.contains(x, y))
+                Circle.list.some((circle) => circle.contains(point))
             ) {
                 tries++;
-                if (tries === MAX_ITERATIONS) {
-                    console.log(
-                        `couldn't find a point after ${MAX_ITERATIONS} iterations`
-                    );
+                if (tries == 1000) {
                     return;
                 }
-                [x, y] = randCoord();
+                point = randomPoint();
             }
-            this.list.push(new Circle(x, y, 1));
+            new Circle(point, 1);
         }
     }
 
-    static handleTouches() {
-        for (let i = 0; i < this.list.length; i++) {
-            for (let j = i + 1; j < this.list.length; j++) {
-                const c = this.list[i];
-                const d = this.list[j];
-                if (c.intersects(d)) {
-                    c.growingSpeed = -GROW_SPEED;
-                    d.growingSpeed = -GROW_SPEED;
+    static shrinkAfterTouch() {
+        for (let i = 0; i < Circle.list.length; i++) {
+            for (let j = i + 1; j < Circle.list.length; j++) {
+                const circle1 = Circle.list[i];
+                const circle2 = Circle.list[j];
+                if (circle1.intersects(circle2)) {
+                    circle1.growingSpeed = -Circle.GROW_SPEED;
+                    circle2.growingSpeed = -Circle.GROW_SPEED;
                 }
             }
         }
     }
 
-    constructor(x, y, r) {
-        this.x = x;
-        this.y = y;
-        this.r = r;
-        this.growingSpeed = GROW_SPEED;
-        this.color = randColor();
+    constructor(center, radius) {
+        this.center = center;
+        this.radius = radius;
+        this.color = randomColor();
+        this.growingSpeed = Circle.GROW_SPEED;
+        Circle.list.push(this);
     }
 
     update() {
-        this.r += this.growingSpeed;
-        if (this.r <= 1) {
-            this.r = 1;
-            this.growingSpeed = GROW_SPEED;
+        this.radius += this.growingSpeed;
+        if (this.radius <= 1) {
+            this.radius = 1;
+            this.growingSpeed = Circle.GROW_SPEED;
         }
     }
 
-    draw(ctx) {
-        ctx.globalAlpha = Math.min(this.r / 10, 1);
+    draw() {
+        ctx.globalAlpha = Math.min(1, this.radius / 10);
         ctx.fillStyle = this.color;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI, false);
+        ctx.arc(...this.center, this.radius, 0, 2 * Math.PI, false);
         ctx.fill();
     }
 
-    contains(u, v) {
-        return distance(this.x, this.y, u, v) <= this.r;
+    contains(point) {
+        return distance(this.center, point) <= this.radius;
     }
 
-    intersects(other) {
+    intersects(otherCircle) {
         return (
-            distance(this.x, this.y, other.x, other.y) <=
-            this.r + other.r
+            distance(this.center, otherCircle.center) <=
+            this.radius + otherCircle.radius
         );
     }
 }
